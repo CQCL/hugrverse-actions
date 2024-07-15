@@ -4,8 +4,8 @@ on:
   # Allow this workflow to be called by another workflow
   workflow_call:
     secrets:
-      GITHUB_TOKEN:
-        description: 'Personal Access Token needed to post comments'
+      GITHUB_PAT:
+        description: 'The github token for the user that will post comments. Defaults to GITHUB_TOKEN'
   # The caller should use these triggers on their workflow file
   pull_request_target:
     branches:
@@ -29,6 +29,10 @@ jobs:
     # The action does not support running on merge_group events,
     # but if the check succeeds in the PR there is no need to check it again.
     if: github.event_name == 'pull_request_target'
+    env:
+      # Github's terrible version of a 'ternary operator'
+      # https://github.com/actions/runner/issues/409#issuecomment-752775072
+      GITHUB_TOKEN: ${{ secrets.GITHUB_PAT != '' && secrets.GITHUB_PAT || secrets.GITHUB_TOKEN }}
     outputs:
       # Whether the PR title indicates a breaking change.
       breaking: ${{ steps.breaking.outputs.breaking }}
@@ -38,8 +42,6 @@ jobs:
       - name: Validate the PR title format
         uses: amannn/action-semantic-pull-request@v5
         id: lint_pr_title
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         with:
           # Configure which types are allowed (newline-delimited).
           # Default: https://github.com/commitizen/conventional-commit-types
@@ -124,7 +126,7 @@ jobs:
             It looks like your proposed title indicates a breaking change. If that's the case,
             please make sure to include a "BREAKING CHANGE:" footer in the body of the pull request
             describing the breaking change and any migration instructions.
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          GITHUB_TOKEN: ${{ env.GITHUB_TOKEN }}
       - name: Fail if the footer is required but missing
         if: ${{ steps.breaking.outputs.breaking == 'true' && steps.breaking.outputs.has_breaking_footer == 'false' }}
         run: exit 1
