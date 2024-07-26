@@ -85,31 +85,18 @@ Adds new issues to a GitHub project board when they are created.
 #### Usage
 ```yaml
 name: Add issues to project board
-
 on:
-  # Allow this workflow to be called by another workfVjlow
-  workflow_call:
-    inputs:
-      project-url:
-        description: 'The URL of the project board to add the issue to'
-        required: true
-        type: string
-    secrets:
-      GITHUB_PAT:
-        description: 'The github token with permissions to add issues to the project'
-        required: true
-  # The caller should use these triggers on their workflow file
   issues:
     types:
       - opened
 
 jobs:
-    check-title:
-        uses: CQCL/hugrverse-actions/.github/workflows/pr-title.yml@main
+    add-to-project:
+        uses: CQCL/hugrverse-actions/.github/workflows/add-to-project.yml@main
         with:
             project-url: https://github.com/orgs/{your-org}/projects/{project-id}
         secrets:
-            GITHUB_PAT: ${{ secrets.GITHUB_PAT }}
+            GITHUB_PAT: ${{ secrets.ADD_TO_PROJECT_PAT }}
 ```
 
 #### Token Permissions
