@@ -77,3 +77,49 @@ This requires giving additional permissions to the included token:
 permissions:
   pull-requests: write
 ```
+
+### [`add-to-project`](https://github.com/CQCL/hugrverse-actions/blob/main/.github/workflows/add-to-project.yml)
+
+Adds new issues to a GitHub project board when they are created.
+
+#### Usage
+```yaml
+name: Add issues to project board
+
+on:
+  # Allow this workflow to be called by another workfVjlow
+  workflow_call:
+    inputs:
+      project-url:
+        description: 'The URL of the project board to add the issue to'
+        required: true
+        type: string
+    secrets:
+      GITHUB_PAT:
+        description: 'The github token with permissions to add issues to the project'
+        required: true
+  # The caller should use these triggers on their workflow file
+  issues:
+    types:
+      - opened
+
+jobs:
+    check-title:
+        uses: CQCL/hugrverse-actions/.github/workflows/pr-title.yml@main
+        with:
+            project-url: https://github.com/orgs/{your-org}/projects/{project-id}
+        secrets:
+            GITHUB_PAT: ${{ secrets.GITHUB_PAT }}
+```
+
+#### Token Permissions
+
+The fine-grained `GITHUB_PAT` secret must include the following permissions:
+
+| Permission | Access |
+| --- | --- |
+| Projects | Read and write |
+
+Critically, the token does not need access to the repository itself. If the
+repository and the project board are in different organizations, the token only
+needs permissions to the latter.

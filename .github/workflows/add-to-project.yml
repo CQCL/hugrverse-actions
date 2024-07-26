@@ -1,0 +1,28 @@
+name: Add issues to project board
+
+on:
+  # Allow this workflow to be called by another workflow
+  workflow_call:
+    inputs:
+      project-url:
+        description: 'The URL of the project board to add the issue to'
+        required: true
+        type: string
+    secrets:
+      GITHUB_PAT:
+        description: 'The github token with permissions to add issues to the project'
+        required: true
+  # The caller should use these triggers on their workflow file
+  issues:
+    types:
+      - opened
+
+jobs:
+  add-to-project:
+    name: Add issue to project
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/add-to-project@v1.0.2
+        with:
+          project-url: ${{ github.event.inputs.project-url }}
+          github-token: ${{ secrets.ADD_TO_PROJECT_PAT }}
