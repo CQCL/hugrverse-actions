@@ -6,6 +6,7 @@ on:
     secrets:
       GITHUB_PAT:
         description: 'The github token for the user that will post comments.'
+        required: true
   # The caller should use these triggers on their workflow file
   pull_request_target:
     branches:
