@@ -5,7 +5,8 @@ on:
   workflow_call:
     secrets:
       GITHUB_PAT:
-        description: 'The github token for the user that will post comments. Defaults to GITHUB_TOKEN'
+        description: 'The github token for the user that will post comments.'
+        required: true
   # The caller should use these triggers on their workflow file
   pull_request_target:
     branches:
@@ -19,9 +20,6 @@ on:
   merge_group:
     types: [checks_requested]
 
-permissions:
-  pull-requests: write
-
 jobs:
   main:
     name: Validate Conventional Commit PR title
@@ -31,7 +29,7 @@ jobs:
     env:
       # Github's terrible version of a 'ternary operator'
       # https://github.com/actions/runner/issues/409#issuecomment-752775072
-      GITHUB_TOKEN: ${{ secrets.GITHUB_PAT != '' && secrets.GITHUB_PAT || secrets.GITHUB_TOKEN }}
+      GITHUB_TOKEN: ${{ secrets.GITHUB_PAT }}
     outputs:
       # Whether the PR title indicates a breaking change.
       breaking: ${{ steps.breaking.outputs.breaking }}

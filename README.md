@@ -70,14 +70,6 @@ The fine-grained `GITHUB_PAT` secret must include the following permissions:
 | --- | --- |
 | Pull requests | Read and write |
 
-If the parameter is not defined, it defaults to the runner's `GITHUB_TOKEN`.
-This requires giving additional permissions to the included token:
-
-```yaml
-permissions:
-  pull-requests: write
-```
-
 ### [`add-to-project`](https://github.com/CQCL/hugrverse-actions/blob/main/.github/workflows/add-to-project.yml)
 
 Adds new issues to a GitHub project board when they are created.
