@@ -165,7 +165,7 @@ jobs:
             ```
             ${{ steps.lint_pr_title.outputs.error_message }}
             ```
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          GITHUB_TOKEN: ${{ env.GITHUB_TOKEN }}
 
 
       # Delete previous comments when the issues have been resolved
@@ -176,4 +176,4 @@ jobs:
         with:
           header: pr-title-lint-error
           delete: true
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          GITHUB_TOKEN: ${{ env.GITHUB_TOKEN }}
