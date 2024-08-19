@@ -17,6 +17,8 @@ on:
       - synchronize
       - labeled
       - unlabeled
+  # The action does not support running on merge_group events,
+  # but if the check succeeds in the PR there is no need to check it again.
   merge_group:
     types: [checks_requested]
 
@@ -24,12 +26,9 @@ jobs:
   main:
     name: Validate Conventional Commit PR title
     runs-on: ubuntu-latest
-    # The action does not support running on merge_group events,
-    # but if the check succeeds in the PR there is no need to check it again.
     env:
-      # Github's terrible version of a 'ternary operator'
-      # https://github.com/actions/runner/issues/409#issuecomment-752775072
-      GITHUB_TOKEN: ${{ secrets.GITHUB_PAT }}
+      # We use a HUGRBOT_PAT secret locally.
+      GITHUB_TOKEN: ${{ secrets.GITHUB_PAT || secrets.HUGRBOT_PAT }}
     outputs:
       # Whether the PR title indicates a breaking change.
       breaking: ${{ steps.breaking.outputs.breaking }}
