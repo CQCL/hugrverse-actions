@@ -23,13 +23,18 @@ env:
     #
     # Github's terrible version of a 'ternary operator'
     # https://github.com/actions/runner/issues/409#issuecomment-752775072
-    PROJECT_URL: ${{ github.repository == 'CQCL/hugrverse-actions' && 'https://github.com/orgs/CQCL-DEV/projects/10' || github.event.inputs.project-url }}
+    PROJECT_URL: ${{ github.repository == 'CQCL/hugrverse-actions' && 'https://github.com/orgs/CQCL-DEV/projects/10' || inputs.project-url }}
 
 jobs:
   add-to-project:
     name: Add issue to project
     runs-on: ubuntu-latest
     steps:
+      - name: Fail if project-url is not set
+        if: env.PROJECT_URL == ''
+        run: |
+          echo "The project-url input is required."
+          exit 1
       - uses: actions/add-to-project@v1.0.2
         with:
           project-url: ${{ env.PROJECT_URL }}
