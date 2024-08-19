@@ -24,6 +24,8 @@ env:
     # Github's terrible version of a 'ternary operator'
     # https://github.com/actions/runner/issues/409#issuecomment-752775072
     PROJECT_URL: ${{ github.repository == 'CQCL/hugrverse-actions' && 'https://github.com/orgs/CQCL-DEV/projects/10' || inputs.project-url }}
+    # We use a ADD_TO_PROJECT_PAT secret locally.
+    GITHUB_TOKEN: ${{ secrets.GITHUB_PAT || secrets.ADD_TO_PROJECT_PAT }}
 
 jobs:
   add-to-project:
@@ -35,7 +37,12 @@ jobs:
         run: |
           echo "The project-url input is required."
           exit 1
+      - name: Fail if GITHUB_PAT is not set
+        if: env.GITHUB_TOKEN == ''
+        run: |
+          echo "The GITHUB_PAT input is required."
+          exit 1
       - uses: actions/add-to-project@v1.0.2
         with:
           project-url: ${{ env.PROJECT_URL }}
-          github-token: ${{ secrets.ADD_TO_PROJECT_PAT }}
+          github-token: ${{ env.GITHUB_TOKEN }}
