@@ -98,7 +98,7 @@ The fine-grained `GITHUB_PAT` secret must include the following permissions:
 | Permission | Access |
 | --- | --- |
 | Projects | Read and write |
+| Pull requests | Read |
 
-Critically, the token does not need access to the repository itself. If the
-repository and the project board are in different organizations, the token only
-needs permissions to the latter.
+Note that fine-grained access tokens cannot grant permissions to projects and repositories in different organisations simultaneously.
+In those cases, you will need an unrestricted _classical_ github token instead. 
