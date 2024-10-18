@@ -26,6 +26,13 @@ jobs:
       GITHUB_TOKEN: ${{ secrets.GITHUB_PAT }}
     steps:
       - uses: actions/checkout@v4
+        with:
+          path: PR_BRANCH
+      - name: Checkout baseline
+        uses: actions/checkout@v4
+        with:
+          ref: ${{ github.event.inputs.baseline-rev || github.event.pull_request.base.sha || github.event.merge_group.base.sha }}
+          path: BASELINE_BRANCH
       - uses: mozilla-actions/sccache-action@v0.0.6
       - name: Install stable toolchain
         uses: dtolnay/rust-toolchain@stable
@@ -36,7 +43,8 @@ jobs:
       - name: Check for public API changes
         id: check-changes
         run: |
-          cargo semver-checks --baseline-rev $BASELINE_REV > diagnostic.txt
+          cd PR_BRANCH
+          cargo semver-checks --baseline-root ../BASELINE_BRANCH > diagnostic.txt
           if [ "$?" -ne 0 ] then
             echo "breaking=true" >> $GITHUB_OUTPUT
           else
@@ -49,8 +57,6 @@ jobs:
             echo
             echo EOF
           } >> $GITHUB_OUTPUT
-        env: 
-          BASELINE_REV: ${{ github.event.inputs.baseline-rev || github.event.pull_request.base.sha || github.event.merge_group.base.sha }}
       
       # Check if the PR title contains a breaking change flag,
       # to change the feedback message.
