@@ -8,6 +8,11 @@ on:
         description: "The base rev to compare against. Defaults to the PR's base branch."
         type: string
         required: false 
+      apt-dependencies:
+        description: "A list of space-separated apt dependencies to install before running."
+        type: string
+        default: ""
+        required: false
     secrets:
       GITHUB_PAT:
         description: 'The github token for the user that will post comments.'
@@ -31,9 +36,16 @@ jobs:
       - name: Checkout baseline
         uses: actions/checkout@v4
         with:
-          ref: ${{ github.event.inputs.baseline-rev || github.event.pull_request.base.sha || github.event.merge_group.base.sha }}
+          ref: ${{ inputs.baseline-rev || github.event.pull_request.base.sha || github.event.merge_group.base.sha }}
           path: BASELINE_BRANCH
       - uses: mozilla-actions/sccache-action@v0.0.6
+      - name: Install apt dependencies
+        if: ${{ inputs.apt-dependencies != '' }}
+        run: |
+          echo "Installing apt dependencies: $APT_DEPENDENCIES"
+          sudo apt-get install -y $APT_DEPENDENCIES
+        env:
+          APT_DEPENDENCIES: ${{ inputs.apt-dependencies }}
       - name: Install stable toolchain
         uses: dtolnay/rust-toolchain@stable
       - name: Install cargo-semver-checks
@@ -43,9 +55,12 @@ jobs:
       - name: Check for public API changes
         id: check-changes
         run: |
+          # Don't fail the workflow when semver-checks returns a non-zero exit code.
+          set +e
+
           cd PR_BRANCH
           cargo semver-checks --baseline-root ../BASELINE_BRANCH > diagnostic.txt
-          if [ "$?" -ne 0 ] then
+          if [ "$?" -ne 0 ]; then
             echo "breaking=true" >> $GITHUB_OUTPUT
           else
             echo "breaking=false" >> $GITHUB_OUTPUT
