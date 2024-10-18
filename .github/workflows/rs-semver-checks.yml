@@ -25,7 +25,7 @@ env:
 
 jobs:
   semver-checks:
-    name: Check if the PR contains public Rust API changes 🦀
+    name: Rust semver-checks 🦀
     runs-on: ubuntu-latest
     env:
       GITHUB_TOKEN: ${{ secrets.GITHUB_PAT }}
@@ -59,7 +59,7 @@ jobs:
           set +e
 
           cd PR_BRANCH
-          cargo semver-checks --baseline-root ../BASELINE_BRANCH > diagnostic.txt
+          cargo semver-checks --color never --baseline-root ../BASELINE_BRANCH > diagnostic.txt
           if [ "$?" -ne 0 ]; then
             echo "breaking=true" >> $GITHUB_OUTPUT
           else
@@ -99,10 +99,10 @@ jobs:
         with:
           header: rs-semver-checks
           message: |
-            This PR has been marked as containing breaking changes to the public Rust API.
+            This PR contains breaking changes to the public Rust API.
 
             <details>
-              <summary>`cargo-semver-checks` summary:</summary>
+              <summary>cargo-semver-checks summary</summary>
               
               ```
               ${{ steps.check-changes.outputs.semver_checks_diagnostic }}
@@ -119,11 +119,10 @@ jobs:
           header: rs-semver-checks
           message: |
             This PR contains breaking changes to the public Rust API.
-            Please try to use deprecated items if possible, or mark the PR with a `!` to indicate 
-            a breaking change otherwise.
+            Please deprecate the old API instead (if possible), or mark the PR with a `!` to indicate a breaking change.
 
             <details>
-              <summary>`cargo-semver-checks` summary:</summary>
+              <summary>cargo-semver-checks summary</summary>
               
               ```
               ${{ steps.check-changes.outputs.semver_checks_diagnostic }}
