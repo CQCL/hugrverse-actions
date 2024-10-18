@@ -12,12 +12,6 @@ on:
       GITHUB_PAT:
         description: 'The github token for the user that will post comments.'
         required: true
-  # The caller should use these triggers on their workflow file
-  pull_request:
-    branches:
-      - main
-  merge_group:
-    types: [checks_requested]
 
 env:
   CARGO_TERM_COLOR: always
