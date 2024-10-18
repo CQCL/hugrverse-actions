@@ -76,7 +76,7 @@ jobs:
       # Check if the PR title contains a breaking change flag,
       # to change the feedback message.
       - name: Check for breaking change flag
-        if: github.event_name == 'pull_request_target'
+        if: github.event_name == 'pull_request'
         id: breaking-pr
         run: |
           if [[ "${PR_TITLE}" =~ ^.*\!:.*$ ]]; then
@@ -86,6 +86,11 @@ jobs:
           fi
         env:
           PR_TITLE: ${{ github.event.pull_request.title }}
+
+      # Debug step
+      - run: |
+          echo "breaking: ${{ steps.check-changes.outputs.breaking }}"
+          echo "breaking-pr: ${{ steps.breaking-pr.outputs.breaking }}"
 
       # Post a diagnostics comment if there are breaking changes and the PR has been marked as breaking.
       - name: Post a comment about the breaking changes. PR marked as breaking.
