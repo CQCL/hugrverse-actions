@@ -14,6 +14,11 @@ tokens](https://github.com/settings/personal-access-tokens/new) with the
 
 The following workflows are available:
 
+- [`drop-cache`](#drop-cache): Drops the cache for a branch when a pull request is closed.
+- [`pr-title`](#pr-title): Checks the title of pull requests to ensure they follow the conventional commits format.
+- [`rs-semver-checks`](#rs-semver-checks): Runs `cargo-semver-checks` on a PR against the base branch, and reports back if there are breaking changes.
+- [`add-to-project`](#add-to-project): Adds new issues to a GitHub project board when they are created.
+
 ### [`drop-cache`](https://github.com/CQCL/hugrverse-actions/blob/main/.github/workflows/drop-cache.yml)
 
 Drops the cache for a branch when a pull request is closed. This helps to avoid
@@ -69,6 +74,38 @@ The fine-grained `GITHUB_PAT` secret must include the following permissions:
 | Permission | Access |
 | --- | --- |
 | Pull requests | Read and write |
+
+### [`rs-semver-checks`](https://github.com/CQCL/hugrverse-actions/blob/main/.github/workflows/rs-semver-checks.yml)
+
+Runs `cargo-semver-checks` on a PR against the base branch, and reports back if
+there are breaking changes.
+Suggests adding a breaking change flag to the PR title if necessary. 
+
+#### Usage
+```yaml
+name: Rust Semver Checks
+on:
+  pull_request:
+    branches:
+      - main
+
+jobs:
+    rs-semver-checks:
+        uses: CQCL/hugrverse-actions/.github/workflows/rs-semver-checks.yml@main
+        secrets:
+            GITHUB_PAT: ${{ secrets.GITHUB_PAT }}
+```
+
+The workflow compares against the base branch of the PR by default. Use the `baseline-rev` input to specify a different base commit.
+
+#### Token Permissions
+
+The fine-grained `GITHUB_PAT` secret must include the following permissions:
+
+| Permission | Access |
+| --- | --- |
+| Pull requests | Read and write |
+
 
 ### [`add-to-project`](https://github.com/CQCL/hugrverse-actions/blob/main/.github/workflows/add-to-project.yml)
 
