@@ -48,8 +48,11 @@ jobs:
           APT_DEPENDENCIES: ${{ inputs.apt-dependencies }}
       - name: Install stable toolchain
         uses: dtolnay/rust-toolchain@stable
+
+      # Install a prebuilt binary of cargo-semver-checks
+      - uses: cargo-bins/cargo-binstall@main
       - name: Install cargo-semver-checks
-        run: cargo install cargo-semver-checks
+        run: cargo binstall -y cargo-semver-checks
 
       # Run cargo-semver-checks against the PR's target branch.
       - name: Check for public API changes
