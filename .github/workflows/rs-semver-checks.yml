@@ -52,7 +52,7 @@ jobs:
       # Install a prebuilt binary of cargo-semver-checks
       - uses: cargo-bins/cargo-binstall@main
       - name: Install cargo-semver-checks
-        run: cargo binstall cargo-semver-checks
+        run: cargo binstall -y cargo-semver-checks
 
       # Run cargo-semver-checks against the PR's target branch.
       - name: Check for public API changes
