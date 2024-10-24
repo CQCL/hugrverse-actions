@@ -139,6 +139,35 @@ jobs:
         if: ${{ github.event_name == 'pull_request_target' && steps.breaking.outputs.breaking == 'true' && steps.breaking.outputs.has_breaking_footer == 'false' }}
         run: exit 1
 
+      # PR titles marked as `rfc:` or `RFC:` are still errors, but we special case and print a different message,
+      # reminding the author to change the title before merging.
+      - name: Check for RFC tag
+        if: always()  && github.event_name == 'pull_request_target' && (steps.lint_pr_title.outputs.error_message != null)
+        id: rfc-tag
+        run: |
+          shopt -s nocasematch
+          if [[ "${PR_TITLE}" =~ ^rfc:.*$ ]]; then
+            echo "rfc=true" >> $GITHUB_OUTPUT
+          else
+            echo "rfc=false" >> $GITHUB_OUTPUT
+          fi
+        env:
+          PR_TITLE: ${{ github.event.pull_request.title }}
+      - name: Post comment if the PR is an RFC
+        id: rfc-tag-comment
+        if: ${{ github.event_name == 'pull_request_target' && steps.rfc-tag.outputs.rfc == 'true' }}
+        uses: marocchino/sticky-pull-request-comment@v2
+        with:
+          header: pr-title-lint-error
+          message: |
+            Hey there and thank you for opening this pull request! 👋
+
+            This PR is marked as an RFC. Please make sure to change the conventional commit type before merging.
+          GITHUB_TOKEN: ${{ env.GITHUB_TOKEN }}
+      - name: Terminate the workflow after posting the RFC comment
+        if: ${{ github.event_name == 'pull_request_target' && steps.rfc-tag.outputs.rfc == 'true' }}
+        run: exit 1
+
       - name: Post a comment if the PR badly formatted
         uses: marocchino/sticky-pull-request-comment@v2
         # When the previous steps fails, the workflow would stop. By adding this
