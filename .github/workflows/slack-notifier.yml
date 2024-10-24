@@ -1,0 +1,92 @@
+name: Post comments on slack, with rate limiting.
+on:
+  workflow_call:
+    secrets:
+      SLACK_BOT_TOKEN:
+        description: 'The slack API token, with `chat:write` permissions.'
+        required: true
+    inputs: 
+      channel-id:
+        description: 'The channel ID to send the message to.'
+        required: true
+        type: string
+      slack-message:
+        description: 'The message to send to slack.'
+        required: true
+        type: string
+      message-label:
+        description: 'A label identifying the message type. Used to rate limit messages.'
+        required: true
+        type: string
+      timeout-minutes:
+        description: 'The minimum time to wait before sending the message again, in minutes.'
+        required: false
+        type: string
+        # Default to 24 hours
+        default: '1440'
+    outputs:
+      sent:
+        description: 'Whether the message was sent. Returns false if we are waiting for a timeout.'
+        value: ${{ jobs.notify-slack.outputs.sent }}
+
+jobs:
+  notify-slack:
+    runs-on: ubuntu-latest
+    outputs:
+      sent: ${{ steps.rate-limit.outputs.send }}
+    steps:
+      - name: Check last message timestamp
+        id: last-sent
+        uses: dawidd6/action-download-artifact@v6
+        with:
+          # Downloads the artifact from the most recent successful run
+          workflow: 'slack-notifier.yml'
+          name: last-sent-${{ inputs.message-label }}.txt
+          if_no_artifact_found: ignore
+
+      - name: Rate limit
+        id: rate-limit
+        run: |
+          # Check if the last message was sent within the timeout
+          echo "Preparing to send message:\n"
+          echo "\"$MESSAGE\"\n"
+
+          if [ -f last-sent-${{ inputs.message-label }}.txt ]
+          then
+            LAST_SENT=$( cat last-sent.txt )
+            echo "Last sent: $LAST_SENT"
+            NOW=$( date +%s )
+            echo "Now: $NOW"
+            echo "Timeout: $TIMEOUT mins"
+            echo "Difference: $(( NOW - LAST_SENT ))"
+
+            if [ $(( NOW - LAST_SENT )) -lt $(( TIMEOUT * 60 )) ]
+            then
+              echo "Rate limiting. Not sending the message."
+              echo "send=false" >> "$GITHUB_OUTPUT"
+              exit 0
+            fi
+          else
+            echo "No last-sent file found."
+          fi
+          echo "send=true" >> "$GITHUB_OUTPUT"
+          date +%s > last-sent-${{ inputs.message-label }}.txt
+        env:
+          TIMEOUT: ${{ inputs.timeout-minutes }}
+          MESSAGE: ${{ inputs.slack-message }}
+
+      - name: Send notification
+        if: ${{ steps.rate-limit.outputs.send == 'true' }}
+        uses: slackapi/slack-github-action@v1.27.0
+        with:
+          channel-id: ${{ inputs.channel-id }}
+          slack-message: ${{ inputs.slack-message }}
+        env:
+          SLACK_BOT_TOKEN: ${{ secrets.SLACK_BOT_TOKEN }}
+
+      - name: Upload the new last-sent timestamp
+        if: ${{ steps.rate-limit.outputs.send == 'true' }}
+        uses: actions/upload-artifact@v4
+        with:
+          name: last-sent-${{ inputs.message-label }}.txt
+          path: last-sent-${{ inputs.message-label }}.txt
