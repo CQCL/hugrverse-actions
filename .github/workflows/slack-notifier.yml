@@ -1,0 +1,136 @@
+name: Post comments on slack, with rate limiting.
+on:
+  workflow_call:
+    secrets:
+      GITHUB_PAT:
+        description: 'The github token used to read the timeout variable.'
+        required: true
+      SLACK_BOT_TOKEN:
+        description: 'The slack API token, with `chat:write` permissions.'
+        required: true
+    inputs: 
+      channel-id:
+        description: 'The channel ID to send the message to.'
+        required: true
+        type: string
+      slack-message:
+        description: 'The message to send to slack.'
+        required: true
+        type: string
+      timeout-variable:
+        description: 'A repository variable used to store the last message timestamp.'
+        required: true
+        type: string
+      timeout-minutes:
+        description: 'The minimum time to wait before sending the message again, in minutes.'
+        required: false
+        type: string
+        # Default to 24 hours
+        default: '1440'
+    outputs:
+      sent:
+        description: 'Whether the message was sent. Returns false if we are waiting for a timeout.'
+        value: ${{ jobs.notify-slack.outputs.sent }}
+
+jobs:
+  notify-slack:
+    runs-on: ubuntu-latest
+    outputs:
+      sent: ${{ steps.rate-limit.outputs.send }}
+    steps:
+      - name: Check last message timestamp
+        id: last-sent
+        run: |
+          set +e
+          gh api \
+            -H "Accept: application/vnd.github+json" \
+            -H "X-GitHub-Api-Version: 2022-11-28" \
+            /repos/$OWNER/$REPO/actions/variables/$VAR \
+            > read-variable.json
+          if [ $? -ne 0 ]
+          then
+            echo "Could not read the variable."
+            echo "missing=true" >> $GITHUB_OUTPUT
+          else
+            jq -r '.value' read-variable.json > last-sent.txt
+            echo "missing=false" >> $GITHUB_OUTPUT
+          fi
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_PAT }}
+          OWNER: ${{ github.repository_owner }}
+          REPO: ${{ github.event.repository.name }}
+          VAR: ${{ inputs.timeout-variable }}
+
+      - name: Create the timestamp variable if it's missing
+        if: ${{ steps.last-sent.outputs.missing == 'true' }}
+        run: |
+          gh api \
+            --method POST \
+            -H "Accept: application/vnd.github+json" \
+            -H "X-GitHub-Api-Version: 2022-11-28" \
+            /repos/$OWNER/$REPO/actions/variables \
+            -f "name=$VAR" -f "value=1990-01-01T00:00:00Z"
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_PAT }}
+          OWNER: ${{ github.repository_owner }}
+          REPO: ${{ github.event.repository.name }}
+          VAR: ${{ inputs.timeout-variable }}
+
+      - name: Rate limit
+        id: rate-limit
+        run: |
+          # Check if the last message was sent within the timeout
+          echo "Preparing to send message:"
+          echo
+          echo "\"$MESSAGE\""
+          echo
+
+          if [ -f last-sent.txt ]
+          then
+            LAST_SENT=$( cat last-sent.txt )
+            NOW=$( date +'%FT%TZ' )
+            echo "Last sent: $LAST_SENT"
+            echo "Now: $NOW"
+
+            DIFF_MINUTES=$(( ( $( date -d "$NOW" +%s ) - $( date -d "$LAST_SENT" +%s ) ) / 60 ))
+            echo "Timeout: $TIMEOUT mins"
+            echo "Difference: $DIFF_MINUTES mins"
+
+            if [ $DIFF_MINUTES -lt $TIMEOUT ]
+            then
+              echo "On timeout period. Not sending the message."
+              echo "send=false" >> "$GITHUB_OUTPUT"
+              exit 0
+            fi
+          else
+            echo "Last-sent variable was not set."
+          fi
+          echo "send=true" >> "$GITHUB_OUTPUT"
+          date +%s > last-sent.txt
+        env:
+          TIMEOUT: ${{ inputs.timeout-minutes }}
+          MESSAGE: ${{ inputs.slack-message }}
+
+      - name: Send notification
+        if: ${{ steps.rate-limit.outputs.send == 'true' }}
+        uses: slackapi/slack-github-action@v1.27.0
+        with:
+          channel-id: ${{ inputs.channel-id }}
+          slack-message: ${{ inputs.slack-message }}
+        env:
+          SLACK_BOT_TOKEN: ${{ secrets.SLACK_BOT_TOKEN }}
+
+      - name: Modify the variable to save the new timestamp
+        if: ${{ steps.rate-limit.outputs.send == 'true' }}
+        run: |
+          gh api \
+            --method PATCH \
+            -H "Accept: application/vnd.github+json" \
+            -H "X-GitHub-Api-Version: 2022-11-28" \
+            /repos/$OWNER/$REPO/actions/variables/$VAR \
+            -f "name=$VAR" -f "value=$( date +'%FT%TZ' )"
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_PAT }}
+          OWNER: ${{ github.repository_owner }}
+          REPO: ${{ github.event.repository.name }}
+          VAR: ${{ inputs.timeout-variable }}
