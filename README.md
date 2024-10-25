@@ -206,11 +206,12 @@ jobs:
         with:
             channel-id: "SOME CHANNEL ID"
             slack-message: "Hello 🌎!"
-            # An unique identifier for the message type, to use in rate limiting.
-            message-label: "hello"
             # A minimum time in minutes to wait before sending another message.
             timeout-minutes: 60
+            # A repository variable used to store the last message timestamp.
+            timeout-variable: "HELLO_MESSAGE_TIMESTAMP"
         secrets:
+            GITHUB_PAT: ${{ secrets.GITHUB_PAT }}
             SLACK_BOT_TOKEN: ${{ secrets.SLACK_BOT_TOKEN }}
 ```
 
@@ -218,8 +219,7 @@ jobs:
 
 - `channel-id`: The ID of the channel to post the message to. (**required**)
 - `slack-message`: The message to post. (**required**)
-- `message-label`: An identifier for the message type, to use in rate limiting.
-  This label is tied to the workflow name. (**required**)
+- `timeout-variable`: A repository variable used to store the last message timestamp. (**required**)
 - `timeout-minutes`: A minimum time in minutes to wait before sending another message. Defaults to 24 hours.
 
 ### Outputs
@@ -234,3 +234,9 @@ channel. See the
 documentation for more information.
 If you are using a slack app, make sure to add it to the channel.
 See formatting options in the [Slack API documentation](https://api.slack.com/reference/surfaces/formatting).
+
+The fine-grained `GITHUB_PAT` secret must include the following permissions:
+
+| Permission | Access |
+| --- | --- |
+| Variables (repository) | Read and write |
