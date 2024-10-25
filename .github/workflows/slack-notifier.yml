@@ -112,7 +112,7 @@ jobs:
           MESSAGE: ${{ inputs.slack-message }}
 
       - name: Send notification
-        if: ${{ false && steps.rate-limit.outputs.send == 'true' }}
+        if: ${{ steps.rate-limit.outputs.send == 'true' }}
         uses: slackapi/slack-github-action@v1.27.0
         with:
           channel-id: ${{ inputs.channel-id }}
