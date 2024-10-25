@@ -232,3 +232,5 @@ jobs:
 channel. See the
 [slackapi/slack-github-action](https://github.com/slackapi/slack-github-action?tab=readme-ov-file#technique-2-slack-app)
 documentation for more information.
+If you are using a slack app, make sure to add it to the channel.
+See formatting options in the [Slack API documentation](https://api.slack.com/reference/surfaces/formatting).

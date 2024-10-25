@@ -47,12 +47,14 @@ jobs:
         id: rate-limit
         run: |
           # Check if the last message was sent within the timeout
-          echo "Preparing to send message:\n"
-          echo "\"$MESSAGE\"\n"
+          echo "Preparing to send message:"
+          echo
+          echo "\"$MESSAGE\""
+          echo
 
           if [ -f last-sent-${{ inputs.message-label }}.txt ]
           then
-            LAST_SENT=$( cat last-sent.txt )
+            LAST_SENT=$( cat last-sent-${{ inputs.message-label }}.txt )
             echo "Last sent: $LAST_SENT"
             NOW=$( date +%s )
             echo "Now: $NOW"
