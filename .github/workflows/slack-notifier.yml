@@ -40,7 +40,6 @@ jobs:
         uses: dawidd6/action-download-artifact@v6
         with:
           # Downloads the artifact from the most recent successful run
-          workflow: 'slack-notifier.yml'
           name: last-sent-${{ inputs.message-label }}.txt
           if_no_artifact_found: ignore
 
