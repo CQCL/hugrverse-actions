@@ -122,6 +122,8 @@ jobs:
 Creates a new issue in the repository, avoiding duplicates.
 The workflow takes a "unique-label" input, which is used to check if an issue with that label already exists.
 
+The specified labels must already exist in the repository, otherwise the workflow will fail.
+
 ### Usage
 ```yaml
 name: Create an issue
