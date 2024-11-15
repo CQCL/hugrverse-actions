@@ -1,0 +1,80 @@
+name: Create an issue on the repository
+on:
+  workflow_call:
+    secrets:
+      GITHUB_PAT:
+        description: 'The github token used to create the issue.'
+        required: true
+    inputs: 
+      repository:
+        description: 'The owner and repository name to create the issue on. For example, "CQCL/hugrverse-actions". Defaults to the current repository.'
+        type: string
+      title:
+        description: 'The title of the issue.'
+        required: true
+        type: string
+      body:
+        description: 'The body of the issue.'
+        required: true
+        type: string
+      unique-label:
+        description: 'A label to check if the issue already exists. If the label is present, the issue will not be created.'
+        required: true
+        type: string
+      other-labels:
+        description: 'A list of space-separated labels to add to the issue.'
+        required: false
+        type: string
+    outputs:
+      created:
+        description: 'Whether the issue was created. Returns false if the issue already exists.'
+        value: ${{ jobs.post-issue.outputs.make-issue }}
+      issue-number:
+        description: 'The number of the created issue. If the issue already exists, this will be the number of the existing issue.'
+        value: ${{ jobs.post-issue.outputs.issue-number }}
+
+jobs:
+  post-issue:
+    runs-on: ubuntu-latest
+    outputs:
+      make-issue: ${{ steps.check-label.outputs.make-issue }}
+      issue-number: ${{ steps.create-issue.outputs.issue-number || steps.check-label.outputs.issue-number }}
+    env:
+      GH_TOKEN: ${{ secrets.GITHUB_PAT }}
+      GH_REPO: ${{ inputs.repository || github.repository }}
+      UNIQUE_LABEL: ${{ inputs.unique-label }}
+      OTHER_LABELS: ${{ inputs.other-labels || '' }}
+    steps:
+      - name: Check if the issue exists already
+        id: check-label
+        run: |
+          previous_issue_number=$(gh issue list \
+              --label "$UNIQUE_LABEL" \
+              --json number \
+              --jq '.[0].number')
+            if [[ -n $previous_issue_number ]]; then
+              echo "Issue already exists: $previous_issue_number"
+              echo "make-issue=false" >> $GITHUB_OUTPUT
+              echo "issue-number=$previous_issue_number" >> $GITHUB_OUTPUT
+            else
+              echo "Issue does not exist"
+              echo "make-issue=true" >> $GITHUB_OUTPUT
+            fi
+      - name: Create a new issue
+        id: create-issue
+        if: steps.check-label.outputs.make-issue == 'true'
+        run: |
+          if [[ -z $OTHER_LABELS ]]; then
+            labels="$UNIQUE_LABEL"
+          else
+            labels="$UNIQUE_LABEL,$OTHER_LABELS"
+          fi
+          new_issue_url=$(gh issue create \
+            --title "$TITLE" \
+            --label "$labels" \
+            --body "$BODY")
+          echo "Created issue: $new_issue_url"
+          echo "issue-number=$(echo $new_issue_url | cut -d'/' -f7)" >> $GITHUB_OUTPUT
+        env:
+          TITLE: ${{ inputs.title }}
+          BODY: ${{ inputs.body }}

@@ -14,6 +14,7 @@ The following workflows are available:
 
 - [`add-to-project`](#add-to-project): Adds new issues to a GitHub project board when they are created.
 - [`coverage-trend`](#coverage-trend): Checks the coverage trend for the project, and produces a summary that can be posted to slack.
+- [`create-issue`](#create-issue): Creates a new issue in the repository, avoiding duplicates.
 - [`drop-cache`](#drop-cache): Drops the cache for a branch when a pull request is closed.
 - [`pr-title`](#pr-title): Checks the title of pull requests to ensure they follow the conventional commits format.
 - [`rs-semver-checks`](#rs-semver-checks): Runs `cargo-semver-checks` on a PR against the base branch, and reports back if there are breaking changes.
@@ -115,6 +116,43 @@ jobs:
     drop-cache:
         uses: CQCL/hugrverse-actions/.github/workflows/drop-cache.yml@main
 ```
+
+## [`create-issue`](https://github.com/CQCL/hugrverse-actions/blob/main/.github/workflows/create-issue.yml)
+
+Creates a new issue in the repository, avoiding duplicates.
+The workflow takes a "unique-label" input, which is used to check if an issue with that label already exists.
+
+### Usage
+```yaml
+name: Create an issue
+on:
+  schedule:
+    # 12:00 every Monday
+    - cron: '0 12 * * 1'
+
+jobs:
+    create-issue:
+        uses: CQCL/hugrverse-actions/.github/workflows/create-issue.yml@main
+        secrets:
+            GITHUB_PAT: ${{ secrets.GITHUB_PAT }}
+        with:
+            title: "Hello 🌎!"
+            body: "This is a new issue."
+            unique-label: "hello-world"
+            # Optionally, set the target repository.
+            repository: "CQCL/hugrverse-actions"
+            # Optional list of labels to add to the issue.
+            other-labels: "greetings,scheduled"
+```
+
+### Token Permissions
+
+The fine-grained `GITHUB_PAT` secret must include the following permissions:
+
+| Permission | Access |
+| --- | --- |
+| Issues | Read and write |
+
 
 ## [`pr-title`](https://github.com/CQCL/hugrverse-actions/blob/main/.github/workflows/pr-title.yml)
 
