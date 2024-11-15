@@ -164,7 +164,7 @@ Suggests adding a breaking change flag to the PR title if necessary.
 ```yaml
 name: Rust Semver Checks
 on:
-  pull_request:
+  pull_request_target:
     branches:
       - main
 
@@ -185,6 +185,8 @@ The fine-grained `GITHUB_PAT` secret must include the following permissions:
 | --- | --- |
 | Pull requests | Read and write |
 
+Note that repository secrets are not available to forked repositories on `pull_request` events.
+To run this workflow on pull requests from forks, ensure the action is triggered by a `pull_request_target` event instead.
 
 ## [`slack-notifier`](https://github.com/CQCL/hugrverse-actions/blob/main/.github/workflows/slack-notifier.yml)
 
