@@ -113,12 +113,13 @@ jobs:
 
       - name: Send notification
         if: ${{ steps.rate-limit.outputs.send == 'true' }}
-        uses: slackapi/slack-github-action@v1.27.0
+        uses: slackapi/slack-github-action@v2.0.0
         with:
-          channel-id: ${{ inputs.channel-id }}
-          slack-message: ${{ inputs.slack-message }}
-        env:
-          SLACK_BOT_TOKEN: ${{ secrets.SLACK_BOT_TOKEN }}
+          method: chat.postMessage
+          token: ${{ secrets.SLACK_BOT_TOKEN }}
+          payload: |
+            channel: ${{ inputs.channel-id }}
+            text: ${{ inputs.slack-message }}
 
       - name: Modify the variable to save the new timestamp
         if: ${{ steps.rate-limit.outputs.send == 'true' }}
