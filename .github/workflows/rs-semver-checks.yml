@@ -79,7 +79,7 @@ jobs:
       # Check if the PR title contains a breaking change flag,
       # to change the feedback message.
       - name: Check for breaking change flag
-        if: github.event_name == 'pull_request'
+        if: ${{ github.event_name == 'pull_request' || github.event_name == 'pull_request_target' }}
         id: breaking-pr
         run: |
           if [[ "${PR_TITLE}" =~ ^.*\!:.*$ ]]; then
@@ -97,7 +97,7 @@ jobs:
 
       # Post a diagnostics comment if there are breaking changes and the PR has been marked as breaking.
       - name: Post a comment about the breaking changes. PR marked as breaking.
-        if: ${{ github.event_name == 'pull_request' && steps.check-changes.outputs.breaking == 'true' && steps.breaking-pr.outputs.breaking == 'true' }}
+        if: ${{ (github.event_name == 'pull_request' || github.event_name == 'pull_request_target') && steps.check-changes.outputs.breaking == 'true' && steps.breaking-pr.outputs.breaking == 'true' }}
         uses: marocchino/sticky-pull-request-comment@v2
         with:
           header: rs-semver-checks
@@ -116,7 +116,7 @@ jobs:
 
       # Post a help comment if there are breaking changes, and the PR hasn't been marked as breaking.
       - name: Post a comment about the breaking changes. PR *not* marked as breaking.
-        if: ${{ github.event_name == 'pull_request' && steps.check-changes.outputs.breaking == 'true' && steps.breaking-pr.outputs.breaking == 'false' }}
+        if: ${{ (github.event_name == 'pull_request' || github.event_name == 'pull_request_target') && steps.check-changes.outputs.breaking == 'true' && steps.breaking-pr.outputs.breaking == 'false' }}
         uses: marocchino/sticky-pull-request-comment@v2
         with:
           header: rs-semver-checks
@@ -141,7 +141,7 @@ jobs:
       # This step doesn't run if any of the previous checks fails.
       - name: Delete previous comments
         uses: marocchino/sticky-pull-request-comment@v2
-        if: ${{ github.event_name == 'pull_request' && steps.check-changes.outputs.breaking == 'false' }}
+        if: ${{ (github.event_name == 'pull_request' || github.event_name == 'pull_request_target') && steps.check-changes.outputs.breaking == 'false' }}
         with:
           header: rs-semver-checks
           delete: true
