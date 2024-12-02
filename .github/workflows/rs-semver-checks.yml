@@ -58,7 +58,9 @@ jobs:
       # Abort if the crate has build errors.
       - name: Check for build errors
         id: build
-        run: cargo check --all-targets
+        run: |
+          cd PR_BRANCH
+          cargo check --all-targets
 
       # Run cargo-semver-checks against the PR's target branch.
       - name: Check for public API changes
