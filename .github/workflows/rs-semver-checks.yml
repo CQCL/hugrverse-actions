@@ -32,6 +32,7 @@ jobs:
     steps:
       - uses: actions/checkout@v4
         with:
+          ref: ${{ github.event.pull_request.head.sha || github.event.merge_group.head.sha }}
           path: PR_BRANCH
       - name: Checkout baseline
         uses: actions/checkout@v4
@@ -54,6 +55,11 @@ jobs:
       - name: Install cargo-semver-checks
         run: cargo binstall -y cargo-semver-checks
 
+      # Abort if the crate has build errors.
+      - name: Check for build errors
+        id: build
+        run: cargo check --all-targets
+
       # Run cargo-semver-checks against the PR's target branch.
       - name: Check for public API changes
         id: check-changes
@@ -75,6 +81,9 @@ jobs:
             echo
             echo EOF
           } >> $GITHUB_OUTPUT
+
+          echo "semver-checks diagnostic:\n"
+          cat diagnostic.txt
       
       # Check if the PR title contains a breaking change flag,
       # to change the feedback message.
