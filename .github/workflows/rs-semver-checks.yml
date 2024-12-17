@@ -39,7 +39,7 @@ jobs:
         with:
           ref: ${{ inputs.baseline-rev || github.event.pull_request.base.sha || github.event.merge_group.base.sha }}
           path: BASELINE_BRANCH
-      - uses: mozilla-actions/sccache-action@v0.0.6
+      - uses: mozilla-actions/sccache-action@v0.0.7
       - name: Install apt dependencies
         if: ${{ inputs.apt-dependencies != '' }}
         run: |
