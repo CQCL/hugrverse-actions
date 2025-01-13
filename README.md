@@ -50,8 +50,9 @@ The fine-grained `GITHUB_PAT` secret must include the following permissions:
 | Projects | Read and write |
 | Pull requests | Read |
 
-Note that fine-grained access tokens cannot grant permissions to projects and repositories in different organisations simultaneously.
-In those cases, you will need an unrestricted _classical_ github token instead. 
+The fine-grained access token **must** be defined in the organization that owns the project. This may require a different token from the one used in other workflows.
+
+If the repository is private and the project is in a different organization, it is not possible to define fine-grained access tokens with simultaneous access to both. In those cases, you will need an unrestricted _classical_ github token instead.
 
 ## [`coverage-trend`](https://github.com/CQCL/hugrverse-actions/blob/main/.github/workflows/coverage-trend.yml)
 
