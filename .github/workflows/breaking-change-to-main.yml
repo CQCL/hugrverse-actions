@@ -7,6 +7,11 @@ on:
         description: "The branch where breaking changes should be targeted"
         required: false
         type: string
+      protected_branch:
+        description: "The branch that should be protected from breaking changes"
+        required: false
+        type: string
+        default: "main"
     secrets:
       GITHUB_PAT:
         description: "The github token for the user that will post comments."
@@ -15,11 +20,12 @@ on:
 jobs:
   main:
     name: Check for breaking changes targeting main
-    if: ${{ inputs.release_branch && inputs.release_branch != 'main' && github.event_name == 'pull_request' }}
+    if: ${{ github.event_name == 'pull_request' }}
     runs-on: ubuntu-latest
     env:
       GITHUB_TOKEN: ${{ secrets.GITHUB_PAT }}
-      RELEASE_BRANCH: ${{ inputs.release_branch || 'main' }}
+      RELEASE_BRANCH: ${{ inputs.release_branch || inputs.protected_branch }}
+      PROTECTED_BRANCH: ${{ inputs.protected_branch }}
     steps:
       - name: Fail if the GITHUB_PAT input is not set
         if: env.GITHUB_TOKEN == ''
@@ -38,27 +44,29 @@ jobs:
 
       - name: Post comment for breaking change targeting main
         if: |
+          env.PROTECTED_BRANCH != env.RELEASE_BRANCH &&
           steps.breaking.outputs.breaking == 'true' && 
-          github.event.pull_request.base.ref == 'main'
+          github.event.pull_request.base.ref == env.PROTECTED_BRANCH
         uses: marocchino/sticky-pull-request-comment@v2
         with:
           header: breaking-change-to-main
           message: |
             ⚠️ **Breaking Change Alert** ⚠️
 
-            This PR contains a breaking change and is targeting the `main` branch.
+            This PR contains a breaking change and is targeting the `${{ env.PROTECTED_BRANCH }}` branch.
 
-            Breaking changes are currently not allowed to be merged into `main` and should instead target the release branch `${{ env.RELEASE_BRANCH }}`.
+            Breaking changes are currently not allowed to be merged into `${{ env.PROTECTED_BRANCH }}` and should instead target the release branch `${{ env.RELEASE_BRANCH }}`.
 
             Please update your PR to target the appropriate branch.
           GITHUB_TOKEN: ${{ env.GITHUB_TOKEN }}
 
-      - name: Fail if breaking change targeting main
+      - name: Fail if breaking change targeting protected branch
         if: |
+          env.PROTECTED_BRANCH != env.RELEASE_BRANCH &&
           steps.breaking.outputs.breaking == 'true' && 
-          github.event.pull_request.base.ref == 'main'
+          github.event.pull_request.base.ref == env.PROTECTED_BRANCH
         run: |
-          echo "Breaking changes are not allowed to be merged into `main`."
+          echo "Breaking changes are not allowed to be merged into `${{ env.PROTECTED_BRANCH }}`."
           exit 1
 
       # only make it to this point if we have not failed above
