@@ -13,6 +13,7 @@ tokens](https://github.com/settings/personal-access-tokens/new) with the
 The following workflows are available:
 
 - [`add-to-project`](#add-to-project): Adds new issues to a GitHub project board when they are created.
+- [`breaking-change-to-main`](#breaking-change-to-main): Checks for breaking changes targeting a protected branch (by default `main`) and disallows them when a separate release branch is specified.
 - [`coverage-trend`](#coverage-trend): Checks the coverage trend for the project, and produces a summary that can be posted to slack.
 - [`create-issue`](#create-issue): Creates a new issue in the repository, avoiding duplicates.
 - [`drop-cache`](#drop-cache): Drops the cache for a branch when a pull request is closed.
@@ -53,6 +54,54 @@ The fine-grained `GITHUB_PAT` secret must include the following permissions:
 The fine-grained access token **must** be defined in the organization that owns the project. This may require a different token from the one used in other workflows.
 
 If the repository is private and the project is in a different organization, it is not possible to define fine-grained access tokens with simultaneous access to both. In those cases, you will need an unrestricted _classical_ github token instead.
+
+## [`breaking-change-to-main`](https://github.com/CQCL/hugrverse-actions/blob/main/.github/workflows/breaking-change-to-main.yml)
+
+Checks for breaking changes targeting `protected_branch` (by default `main`) and
+disallows them when a separate `release_branch` is specified. This is useful to
+prevent accidental breaking changes from being merged into `protected_branch`,
+when non-breaking patch releases are still expected to be published before the
+next breaking release.
+
+By default, the `release_branch` is set to the `protected_branch`, and in this
+case, the workflow will be a no-op.
+
+### Usage
+```yaml
+name: Check for breaking changes targeting main
+on:
+  pull_request_target:
+    branches:
+      - main
+    types:
+      - opened
+      - edited
+      - synchronize
+      - labeled
+      - unlabeled
+  merge_group:
+    types: [checks_requested]
+
+jobs:
+    breaking-change-to-main:
+        uses: CQCL/hugrverse-actions/.github/workflows/breaking-change-to-main.yml@main
+        secrets:
+            GITHUB_PAT: ${{ secrets.GITHUB_PAT }}
+        with:
+            # The dedicated release branch, or the main branch if none exists.
+            # Defaults to the same value as protected_branch.
+            release_branch: release-branch
+            # The protected branch, typically main (default) or master.
+            protected_branch: main
+```
+
+### Token Permissions
+
+The fine-grained `GITHUB_PAT` secret must include the following permissions:
+
+| Permission | Access |
+| --- | --- |
+| Pull requests | Read and write |
 
 ## [`coverage-trend`](https://github.com/CQCL/hugrverse-actions/blob/main/.github/workflows/coverage-trend.yml)
 
