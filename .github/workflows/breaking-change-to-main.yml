@@ -1,0 +1,85 @@
+name: Check for breaking changes targeting main
+on:
+  # This workflow can only be called by another workflow
+  workflow_call:
+    inputs:
+      release_branch:
+        description: "The branch where breaking changes should be targeted"
+        required: false
+        type: string
+      protected_branch:
+        description: "The branch that should be protected from breaking changes"
+        required: false
+        type: string
+        default: "main"
+    secrets:
+      GITHUB_PAT:
+        description: "The github token for the user that will post comments."
+        required: true
+
+jobs:
+  main:
+    name: Check for breaking changes targeting main
+    if: ${{ github.event_name == 'pull_request_target' }}
+    runs-on: ubuntu-latest
+    env:
+      GITHUB_TOKEN: ${{ secrets.GITHUB_PAT }}
+      RELEASE_BRANCH: ${{ inputs.release_branch || inputs.protected_branch }}
+      PROTECTED_BRANCH: ${{ inputs.protected_branch }}
+    steps:
+      - name: Fail if the GITHUB_PAT input is not set
+        if: env.GITHUB_TOKEN == ''
+        run: |
+          echo "The `GITHUB_PAT` input is required."
+          exit 1
+
+      - name: Check for breaking change in title
+        id: breaking
+        run: |
+          if [[ "${{ github.event.pull_request.title }}" =~ ^.*\!:.*$ ]]; then
+            echo "breaking=true" >> $GITHUB_OUTPUT
+          else
+            echo "breaking=false" >> $GITHUB_OUTPUT
+          fi
+
+      - name: Post comment for breaking change targeting main
+        if: |
+          env.PROTECTED_BRANCH != env.RELEASE_BRANCH &&
+          steps.breaking.outputs.breaking == 'true' && 
+          github.event.pull_request.base.ref == env.PROTECTED_BRANCH
+        uses: marocchino/sticky-pull-request-comment@v2
+        with:
+          header: breaking-change-to-main
+          message: |
+            ⚠️ **Breaking Change Alert** ⚠️
+
+            This PR contains a breaking change and is targeting the `${{ env.PROTECTED_BRANCH }}` branch.
+
+            Breaking changes are currently not allowed to be merged into `${{ env.PROTECTED_BRANCH }}` and should instead target the release branch `${{ env.RELEASE_BRANCH }}`.
+
+            Please update your PR to target the appropriate branch.
+          GITHUB_TOKEN: ${{ env.GITHUB_TOKEN }}
+
+      - name: Fail if breaking change targeting protected branch
+        if: |
+          env.PROTECTED_BRANCH != env.RELEASE_BRANCH &&
+          steps.breaking.outputs.breaking == 'true' && 
+          github.event.pull_request.base.ref == env.PROTECTED_BRANCH
+        run: |
+          echo "Breaking changes are not allowed to be merged into `${{ env.PROTECTED_BRANCH }}`."
+          exit 1
+
+      # only make it to this point if we have not failed above
+      - name: Delete comment when fixed
+        uses: marocchino/sticky-pull-request-comment@v2
+        with:
+          header: breaking-change-to-main
+          delete: true
+          GITHUB_TOKEN: ${{ env.GITHUB_TOKEN }}
+
+  # Avoids the workflow from being skipped when triggered by a non-pull_request_target event.
+  never-skipped:
+    name: Never skipped
+    runs-on: ubuntu-latest
+    steps:
+      - run: echo "success"
