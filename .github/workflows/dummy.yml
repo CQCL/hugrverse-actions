@@ -81,3 +81,5 @@ jobs:
   never-skipped:
     name: Never skipped
     runs-on: ubuntu-latest
+    steps:
+      - run: echo "success"
