@@ -76,3 +76,10 @@ jobs:
           header: breaking-change-to-main
           delete: true
           GITHUB_TOKEN: ${{ env.GITHUB_TOKEN }}
+
+  # Avoids the workflow from being skipped when triggered by a non-pull_request_target event.
+  never-skipped:
+    name: Never skipped
+    runs-on: ubuntu-latest
+    steps:
+      - run: echo "success"

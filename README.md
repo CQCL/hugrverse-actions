@@ -89,6 +89,7 @@ jobs:
             GITHUB_PAT: ${{ secrets.GITHUB_PAT }}
         with:
             # The dedicated release branch, or the main branch if none exists.
+            # Typically, this will be a [repo variable](https://docs.github.com/en/actions/writing-workflows/choosing-what-your-workflow-does/store-information-in-variables).
             # Defaults to the same value as protected_branch.
             release_branch: release-branch
             # The protected branch, typically main (default) or master.
