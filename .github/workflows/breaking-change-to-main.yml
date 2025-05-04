@@ -68,7 +68,7 @@ jobs:
           steps.breaking.outputs.breaking == 'true' && 
           github.event.pull_request.base.ref == env.PROTECTED_BRANCH
         run: |
-          echo "Breaking changes are not allowed to be merged into `${PROTECTED_BRANCH}`."
+          echo "Breaking changes are not allowed to be merged into '${PROTECTED_BRANCH}'."
           exit 1
 
       # only make it to this point if we have not failed above
