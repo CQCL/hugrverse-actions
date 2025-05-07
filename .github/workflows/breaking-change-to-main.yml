@@ -80,7 +80,7 @@ jobs:
           GITHUB_TOKEN: ${{ env.GITHUB_TOKEN }}
 
   # Avoids the workflow from being skipped when triggered by a non-pull_request_target event.
-  never-skipped:
+  required-checks:
     name: Required checks
     needs: [main]
     if: ${{ !cancelled() }}
