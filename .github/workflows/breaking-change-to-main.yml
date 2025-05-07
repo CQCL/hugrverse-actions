@@ -19,7 +19,7 @@ on:
 
 jobs:
   main:
-    name: Check for breaking changes targeting main
+    name: Check breaking changes
     if: ${{ github.event_name == 'pull_request_target' }}
     runs-on: ubuntu-latest
     env:
@@ -80,8 +80,18 @@ jobs:
           GITHUB_TOKEN: ${{ env.GITHUB_TOKEN }}
 
   # Avoids the workflow from being skipped when triggered by a non-pull_request_target event.
-  never-skipped:
-    name: Never skipped
+  required-checks:
+    name: Required checks
+    needs: [main]
+    if: ${{ !cancelled() }}
     runs-on: ubuntu-latest
     steps:
-      - run: echo "success"
+      - name: Fail if required checks failed
+        if: ${{ contains(needs.*.result, 'failure') || contains(needs.*.result, 'cancelled') }}
+        run: |
+          echo "Required checks failed"
+          echo "Please check the logs for more information"
+          exit 1
+      - name: Pass if required checks passed
+        run: |
+          echo "All required checks passed"
