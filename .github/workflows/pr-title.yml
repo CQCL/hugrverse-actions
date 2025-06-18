@@ -103,7 +103,7 @@ jobs:
         if: github.event_name == 'pull_request_target'
         id: breaking
         run: |
-          if [[ "${PR_TITLE}" =~ ^[^:(]*(\(.*\))?\!:.*$ ]]; then
+          if echo "${PR_TITLE}" | grep -qE '^[^:(]*(\(.*\))?\!:.*$'; then
             echo "breaking=true" >> $GITHUB_OUTPUT
           else
             echo "breaking=false" >> $GITHUB_OUTPUT
