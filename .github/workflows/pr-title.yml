@@ -192,10 +192,15 @@ jobs:
             ```
             and include a "BREAKING CHANGE:" footer in the body of the pull request.
 
-            Details:
+            <details>
+
+            <summary>Details</summary>
+
             ```
             ${{ steps.lint_pr_title.outputs.error_message }}
             ```
+
+            </details>
           GITHUB_TOKEN: ${{ env.GITHUB_TOKEN }}
 
 
