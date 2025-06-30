@@ -178,27 +178,32 @@ jobs:
           message: |
             Hey there and thank you for opening this pull request! 👋
 
-            We require pull request titles to follow the [Conventional Commits specification](https://www.conventionalcommits.org/en/v1.0.0/)
-            and it looks like your proposed title needs to be adjusted.
+            We follow the [Conventional Commits](https://www.conventionalcommits.org/en/v1.0.0/)
+            convention for PR titles. It looks like your title needs some adjustment.
 
-            Your title should look like this. The scope field is optional.
-            ```
-            <type>(<scope>): <description>
-            ```
+            The title should have a type prefix. The most important ones you should have in mind are:
+            - `feat`: for new features
+            - `fix`: for bug fixes
 
-            If the PR includes a breaking change, mark it with an exclamation mark:
-            ```
-            <type>!: <description>
-            ```
-            and include a "BREAKING CHANGE:" footer in the body of the pull request.
+            If the PR contains a breaking change, use `feat!:` or `fix!:` instead
+            and include a "BREAKING CHANGE:" footer in the description of the pull request.
+
+            You may also include a `(scope)` after the type prefix, which is optional.
 
             <details>
 
-            <summary>Details</summary>
+            <summary>Expand this message for the full list of tags.</summary>
 
-            ```
-            ${{ steps.lint_pr_title.outputs.error_message }}
-            ```
+            - feat: New feature
+            - fix: Bug fix
+            - docs: Documentation only changes
+            - style: Changes that do not affect the meaning of the code (white-space, formatting, missing semi-colons, etc)
+            - refactor: A code change that neither fixes a bug nor adds a feature
+            - perf: Performance improvements
+            - test: Adding missing or correcting existing tests
+            - ci: Changes to our CI configuration files and scripts
+            - chore: Other changes that do not alter public APIs or code behavior
+            - revert: Reverts a previous commit
 
             </details>
           GITHUB_TOKEN: ${{ env.GITHUB_TOKEN }}
