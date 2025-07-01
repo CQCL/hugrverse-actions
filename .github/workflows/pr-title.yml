@@ -180,9 +180,11 @@ jobs:
 
             We follow the [Conventional Commits](https://www.conventionalcommits.org/en/v1.0.0/) convention for PR titles. It looks like your title needs some adjustment.
 
-            The title should have a type prefix. The most important ones you should have in mind are:
+            The title should have a type prefix. The most important ones are:
             - `feat`: for new features
             - `fix`: for bug fixes
+            
+The prefix should be followed by a colon.
 
             If the PR contains a breaking change, use `feat!:` or `fix!:` instead and include a "BREAKING CHANGE:" footer in the description of the pull request.
 
@@ -194,13 +196,13 @@ jobs:
 
             - feat: New feature
             - fix: Bug fix
-            - docs: Documentation only changes
-            - style: Changes that do not affect the meaning of the code (white-space, formatting, missing semi-colons, etc)
+            - docs: Documentation-only changes
+            - style: Changes that do not affect the meaning of the code (white-space, formatting, missing semicolons, etc)
             - refactor: A code change that neither fixes a bug nor adds a feature
             - perf: Performance improvements
             - test: Adding missing or correcting existing tests
             - ci: Changes to our CI configuration files and scripts
-            - chore: Other changes that do not alter public APIs or code behavior
+            - chore: Other changes that do not alter public APIs or code behaviour
             - revert: Reverts a previous commit
 
             </details>
