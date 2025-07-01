@@ -37,7 +37,7 @@ jobs:
           sudo apt-get install -y $APT_DEPENDENCIES
         env:
           APT_DEPENDENCIES: ${{ inputs.apt-dependencies }}
-      - uses: ./.github/actions/rs-semver-checks
+      - uses: CQCL/hugrverse-actions/.github/actions/rs-semver-checks@2a2f5ca8e000030636dc1511f6c935c1492204c3
         with:
           baseline-rev: ${{ inputs.baseline-rev }}
           token: ${{ secrets.GITHUB_PAT }}
