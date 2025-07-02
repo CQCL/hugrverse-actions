@@ -2,13 +2,15 @@
 
 Reusable workflows for projects in the hugrverse.
 
-To call use workflow in your project, add it to a workflow in your project's `.github/workflows` directory.
+To use a workflow in your project, add define it in a `.yml` file in your project's
+`.github/workflows` directory.
 See the workflow list below for usage instructions, including the workflow triggers.
 
 Some workflows may require additional inputs, such as a [`GITHUB_PAT`] to
-access the GitHub API. For these we [generate fine-grained access
-tokens](https://github.com/settings/personal-access-tokens/new) with the
-@hugrbot bot account, which must be stored in the repository secrets.
+access the GitHub API. Follow github's instructions for [generating fine-grained access
+tokens](https://github.com/settings/personal-access-tokens/new), and store it in your
+repository secrets.
+For Quantinuum projects, ask the `HUGR` team for a [@hugrbot](https://github.com/hugrbot) token.
 
 The following workflows are available:
 
