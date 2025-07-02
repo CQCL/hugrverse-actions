@@ -20,7 +20,7 @@ The following workflows are available:
 - [`create-issue`](#create-issue): Creates a new issue in the repository, avoiding duplicates.
 - [`drop-cache`](#drop-cache): Drops the cache for a branch when a pull request is closed.
 - [`pr-title`](#pr-title): Checks the title of pull requests to ensure they follow the conventional commits format.
-- [`rs-semver-checks`](#rs-semver-checks): Runs `cargo-semver-checks` on a PR against the base branch, and reports back if there are breaking changes.
+- [`rs-semver-checks`](#rs-semver-checks): Runs `cargo-semver-checks` on a PR against the base branch, and reports back if there are breaking changes. If you need more customisation, use the homonymous action instead (see [Using the Semver action directly](#using-the-semver-action-directly)).
 - [`slack-notifier`](#slack-notifier): Post comments on slack, with a rate limit to avoid spamming the channel.
 
 ## [`add-to-project`](https://github.com/CQCL/hugrverse-actions/blob/main/.github/workflows/add-to-project.yml)
@@ -280,6 +280,33 @@ The fine-grained `GITHUB_PAT` secret must include the following permissions:
 
 Note that repository secrets are not available to forked repositories on `pull_request` events.
 To run this workflow on pull requests from forks, ensure the action is triggered by a `pull_request_target` event instead.
+
+### Using the Semver action directly
+
+If you need more customisation, you can use the composite action of the same name.
+This can be integrated in an existing workflow, so that the action can e.g. be preceded
+by setup steps that install dependencies. See the [workflow](https://github.com/CQCL/hugrverse-actions/blob/main/.github/workflows/rs-semver-checks.yml) file for a full example.
+
+```yaml
+jobs:
+  semver-checks:
+    name: Rust semver-checks 🦀
+    runs-on: ubuntu-latest
+    env:
+      GITHUB_TOKEN: ${{ secrets.GITHUB_PAT }}
+    steps:
+      - name: Install apt dependencies
+        if: ${{ inputs.apt-dependencies != '' }}
+        run: |
+          echo "Installing apt dependencies: $APT_DEPENDENCIES"
+          sudo apt-get install -y $APT_DEPENDENCIES
+        env:
+          APT_DEPENDENCIES: ${{ inputs.apt-dependencies }}
+      - uses: CQCL/hugrverse-actions/rs-semver-checks@main
+        with:
+          baseline-rev: ${{ inputs.baseline-rev }}
+          token: ${{ secrets.GITHUB_PAT }}
+```
 
 ## [`slack-notifier`](https://github.com/CQCL/hugrverse-actions/blob/main/.github/workflows/slack-notifier.yml)
 
