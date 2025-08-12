@@ -247,6 +247,46 @@ The fine-grained `GITHUB_PAT` secret must include the following permissions:
 | --- | --- |
 | Pull requests | Read and write |
 
+## [`py-semver-checks`](https://github.com/CQCL/hugrverse-actions/blob/main/py-semver-checks/action.yml)
+
+Runs [`griffe`](https://mkdocstrings.github.io/griffe/) on a PR against the base branch,
+and reports back if there are breaking changes in the Python API.
+Suggests adding a breaking change flag to the PR title if necessary. 
+
+### Usage
+```yaml
+name: Python Semver Checks
+on:
+  pull_request_target:
+    branches:
+      - main
+
+jobs:
+  semver-checks:
+    name: Python semver-checks 🐍
+    runs-on: ubuntu-latest
+    env:
+      GITHUB_TOKEN: ${{ secrets.GITHUB_PAT }}
+    steps:
+      - uses: CQCL/hugrverse-actions/py-semver-checks@main
+        with:
+          packages: python-package1 path/to/python-package2
+          token: ${{ secrets.GITHUB_PAT }}
+```
+
+The workflow compares against the base branch of the PR by default. Use the `baseline-rev` input to specify a different base commit.
+
+### Token Permissions
+
+The fine-grained `GITHUB_PAT` secret must include the following permissions:
+
+| Permission | Access |
+| --- | --- |
+| Pull requests | Read and write |
+
+Note that repository secrets are not available to forked repositories on `pull_request` events.
+To run this workflow on pull requests from forks, ensure the action is triggered by a `pull_request_target` event instead.
+
 ## [`rs-semver-checks`](https://github.com/CQCL/hugrverse-actions/blob/main/.github/workflows/rs-semver-checks.yml)
 
 Runs `cargo-semver-checks` on a PR against the base branch, and reports back if
