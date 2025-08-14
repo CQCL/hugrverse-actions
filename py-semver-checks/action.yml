@@ -47,7 +47,7 @@ runs:
 
         {
           echo 'semver_checks_diagnostic<<EOF'
-          cat diagnostic.txt
+          cat diagnostic.txt  | sed 's/\x1B\[[0-9;]\{1,\}[A-Za-z]//g'
           echo
           echo EOF
         } >> $GITHUB_OUTPUT
