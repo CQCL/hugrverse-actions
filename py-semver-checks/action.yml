@@ -52,7 +52,8 @@ runs:
           echo EOF
         } >> $GITHUB_OUTPUT
 
-        echo "semver-checks diagnostic:\n"
+        echo "semver-checks diagnostic:"
+        echo
         cat diagnostic.txt
     
     # Check if the PR title contains a breaking change flag,
