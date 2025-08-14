@@ -20,6 +20,7 @@ The following workflows are available:
 - [`create-issue`](#create-issue): Creates a new issue in the repository, avoiding duplicates.
 - [`drop-cache`](#drop-cache): Drops the cache for a branch when a pull request is closed.
 - [`pr-title`](#pr-title): Checks the title of pull requests to ensure they follow the conventional commits format.
+- [`py-semver-checks`](#py-semver-checks): Runs `griffe` on a PR against the base branch, and reports back if there are breaking changes.
 - [`rs-semver-checks`](#rs-semver-checks): Runs `cargo-semver-checks` on a PR against the base branch, and reports back if there are breaking changes. If you need more customisation, use the homonymous action instead (see [Using the Semver action directly](#using-the-semver-action-directly)).
 - [`slack-notifier`](#slack-notifier): Post comments on slack, with a rate limit to avoid spamming the channel.
 
@@ -246,6 +247,45 @@ The fine-grained `GITHUB_PAT` secret must include the following permissions:
 | Permission | Access |
 | --- | --- |
 | Pull requests | Read and write |
+
+## [`py-semver-checks`](https://github.com/CQCL/hugrverse-actions/blob/main/py-semver-checks/action.yml)
+
+Runs [`griffe`](https://mkdocstrings.github.io/griffe/) on a PR against the base branch,
+and reports back if there are breaking changes in the Python API.
+Suggests adding a breaking change flag to the PR title if necessary. 
+
+### Usage
+```yaml
+name: Python Semver Checks
+on:
+  pull_request_target:
+    branches:
+      - main
+
+jobs:
+  semver-checks:
+    name: Python semver-checks 🐍
+    runs-on: ubuntu-latest
+    env:
+      GITHUB_TOKEN: ${{ secrets.GITHUB_PAT }}
+    steps:
+      - uses: CQCL/hugrverse-actions/py-semver-checks@main
+        with:
+          packages: python-package1 path/to/python-package2
+          baseline-rev: main  # Defaults to base branch of the PR
+          token: ${{ secrets.GITHUB_PAT }}
+```
+
+### Token Permissions
+
+The fine-grained `GITHUB_PAT` secret must include the following permissions:
+
+| Permission | Access |
+| --- | --- |
+| Pull requests | Read and write |
+
+Note that repository secrets are not available to forked repositories on `pull_request` events.
+To run this workflow on pull requests from forks, ensure the action is triggered by a `pull_request_target` event instead.
 
 ## [`rs-semver-checks`](https://github.com/CQCL/hugrverse-actions/blob/main/.github/workflows/rs-semver-checks.yml)
 
