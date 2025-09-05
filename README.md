@@ -252,7 +252,8 @@ The fine-grained `GITHUB_PAT` secret must include the following permissions:
 
 Runs [`griffe`](https://mkdocstrings.github.io/griffe/) on a PR against the base branch,
 and reports back if there are breaking changes in the Python API.
-Suggests adding a breaking change flag to the PR title if necessary. 
+
+If the PR has a breaking change, posts a comment with a summary of the changes.
 
 ### Usage
 ```yaml
@@ -272,7 +273,7 @@ jobs:
       - uses: CQCL/hugrverse-actions/py-semver-checks@main
         with:
           packages: python-package1 path/to/python-package2
-          baseline-rev: main  # Defaults to base branch of the PR
+          baseline-rev: main  # If not present, defaults to base branch of the PR
           token: ${{ secrets.GITHUB_PAT }}
 ```
 
@@ -291,22 +292,25 @@ To run this workflow on pull requests from forks, ensure the action is triggered
 
 Runs `cargo-semver-checks` on a PR against the base branch, and reports back if
 there are breaking changes.
-Suggests adding a breaking change flag to the PR title if necessary. 
+
+If the PR has a breaking change, posts a comment with a summary of the changes.
 
 ### Usage
-```yaml
-name: Rust Semver Checks
-on:
-  pull_request_target:
-    branches:
-      - main
 
+```yaml
 jobs:
-    rs-semver-checks:
-        uses: CQCL/hugrverse-actions/.github/workflows/rs-semver-checks.yml@main
-        secrets:
-            GITHUB_PAT: ${{ secrets.GITHUB_PAT }}
+  semver-checks:
+    name: Rust semver-checks 🦀
+    runs-on: ubuntu-latest
+    env:
+      GITHUB_TOKEN: ${{ secrets.GITHUB_PAT }}
+    steps:
+      - uses: CQCL/hugrverse-actions/rs-semver-checks@main
+        with:
+          baseline-rev: main  # If not present, defaults to base branch of the PR
+          token: ${{ secrets.GITHUB_PAT }}
 ```
+
 
 The workflow compares against the base branch of the PR by default. Use the `baseline-rev` input to specify a different base commit.
 
@@ -320,33 +324,6 @@ The fine-grained `GITHUB_PAT` secret must include the following permissions:
 
 Note that repository secrets are not available to forked repositories on `pull_request` events.
 To run this workflow on pull requests from forks, ensure the action is triggered by a `pull_request_target` event instead.
-
-### Using the Semver action directly
-
-If you need more customisation, you can use the composite action of the same name.
-This can be integrated in an existing workflow, so that the action can e.g. be preceded
-by setup steps that install dependencies. See the [workflow](https://github.com/CQCL/hugrverse-actions/blob/main/.github/workflows/rs-semver-checks.yml) file for a full example.
-
-```yaml
-jobs:
-  semver-checks:
-    name: Rust semver-checks 🦀
-    runs-on: ubuntu-latest
-    env:
-      GITHUB_TOKEN: ${{ secrets.GITHUB_PAT }}
-    steps:
-      - name: Install apt dependencies
-        if: ${{ inputs.apt-dependencies != '' }}
-        run: |
-          echo "Installing apt dependencies: $APT_DEPENDENCIES"
-          sudo apt-get install -y $APT_DEPENDENCIES
-        env:
-          APT_DEPENDENCIES: ${{ inputs.apt-dependencies }}
-      - uses: CQCL/hugrverse-actions/rs-semver-checks@main
-        with:
-          baseline-rev: ${{ inputs.baseline-rev }}
-          token: ${{ secrets.GITHUB_PAT }}
-```
 
 ## [`slack-notifier`](https://github.com/CQCL/hugrverse-actions/blob/main/.github/workflows/slack-notifier.yml)
 
