@@ -4,10 +4,9 @@ description: Action running Python semver-checks
 inputs:
   baseline-rev:
     description: "The base rev to compare against. Defaults to the PR's base branch."
-    type: string
     required: false
   token:
-    description: 'A Github PAT to post comments.'
+    description: "A Github PAT to post comments."
     required: true
 
 runs:
@@ -18,18 +17,14 @@ runs:
         ref: ${{ github.event.pull_request.head.sha || github.event.merge_group.head.sha }}
     - name: Fetch baseline
       shell: bash
-      run: |
-          git fetch origin ${{ inputs.baseline-rev }} --depth 1
-    
+      run: git fetch origin "$BASELINE_REV" --depth 1
+      env:
+        BASELINE_REV: ${{ inputs.baseline-rev || github.event.pull_request.base.sha || github.event.merge_group.base.sha }}
+
     - name: Set up uv
       uses: astral-sh/setup-uv@v5
       with:
         enable-cache: true
-    - name: Install griffe
-      shell: bash
-      run: |
-        uv venv
-        uv pip install griffe
 
     - name: Check for public API changes
       id: check-changes
@@ -38,7 +33,8 @@ runs:
         # Don't fail the workflow when the script returns a non-zero exit code.
         set +e
 
-        uv run ${{ github.action_path }}/action.py --baseline ${{ inputs.baseline-rev || github.event.pull_request.base.sha || github.event.merge_group.base.sha }} --packages ${{ inputs.packages }} > diagnostic.txt
+        echo "Running semver-checks on packages: $PACKAGES for baseline: $BASELINE_REV"
+        uv run "$ACTION_PATH/action.py" --baseline "$BASELINE_REV" --packages "$PACKAGES" > diagnostic.txt
         if [ "$?" -ne 0 ]; then
           echo "breaking=true" >> $GITHUB_OUTPUT
         else
@@ -55,7 +51,11 @@ runs:
         echo "semver-checks diagnostic:"
         echo
         cat diagnostic.txt
-    
+      env:
+        ACTION_PATH: ${{ github.action_path }}
+        BASELINE_REV: ${{ inputs.baseline-rev || github.event.pull_request.base.sha || github.event.merge_group.base.sha }}
+        PACKAGES: ${{ inputs.packages }}
+
     # Check if the PR title contains a breaking change flag,
     # to change the feedback message.
     - name: Check for breaking change flag
