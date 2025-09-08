@@ -17,7 +17,7 @@ runs:
         ref: ${{ github.event.pull_request.head.sha || github.event.merge_group.head.sha }}
     - name: Fetch baseline
       shell: bash
-      run: git fetch origin $BASELINE_REV --depth 1
+      run: git fetch origin "$BASELINE_REV" --depth 1
       env:
         BASELINE_REV: ${{ inputs.baseline-rev || github.event.pull_request.base.sha || github.event.merge_group.base.sha }}
 
