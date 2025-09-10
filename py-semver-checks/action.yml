@@ -34,7 +34,7 @@ runs:
         set +e
 
         echo "Running semver-checks on packages: $PACKAGES for baseline: $BASELINE_REV"
-        uv run "$ACTION_PATH/action.py" --baseline "$BASELINE_REV" --packages "$PACKAGES" > diagnostic.txt
+        uv run "$ACTION_PATH/action.py" --baseline "$BASELINE_REV" --packages $PACKAGES > diagnostic.txt
         if [ "$?" -ne 0 ]; then
           echo "breaking=true" >> $GITHUB_OUTPUT
         else
