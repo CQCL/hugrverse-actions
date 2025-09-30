@@ -14,12 +14,12 @@ runs:
   steps:
     - uses: actions/checkout@v4
       with:
-        ref: ${{ github.event.pull_request.head.sha || github.event.merge_group.head.sha }}
+        ref: ${{ github.event.pull_request.head.merge_commit_sha || github.event.merge_group.head.sha }}
     - name: Fetch baseline
       shell: bash
       run: git fetch origin "$BASELINE_REV" --depth 1
       env:
-        BASELINE_REV: ${{ inputs.baseline-rev || github.event.pull_request.base.sha || github.event.merge_group.base.sha }}
+        BASELINE_REV: ${{ inputs.baseline-rev || github.event.pull_request.base.ref || github.event.merge_group.base.ref }}
 
     - name: Set up uv
       uses: astral-sh/setup-uv@v5
