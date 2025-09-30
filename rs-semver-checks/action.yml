@@ -19,7 +19,7 @@ runs:
     - name: Checkout baseline
       uses: actions/checkout@v4
       with:
-        ref: ${{ inputs.baseline-rev || github.event.pull_request.base.sha || github.event.merge_group.base.sha }}
+        ref: ${{ inputs.baseline-rev || github.event.pull_request.base.ref || github.event.merge_group.base.ref }}
         path: BASELINE_BRANCH
     - uses: mozilla-actions/sccache-action@v0.0.9
     - name: Install stable toolchain
