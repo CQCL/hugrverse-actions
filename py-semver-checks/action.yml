@@ -19,7 +19,7 @@ runs:
       shell: bash
       run: git fetch origin "$BASELINE_REV" --depth 1
       env:
-        BASELINE_REV: ${{ inputs.baseline-rev || github.event.pull_request.base.ref || github.event.merge_group.base.ref }}
+        BASELINE_REV: ${{ inputs.baseline-rev || github.event.pull_request.base.sha || github.event.merge_group.base.sha }}
 
     - name: Set up uv
       uses: astral-sh/setup-uv@v5
@@ -33,7 +33,10 @@ runs:
         # Don't fail the workflow when the script returns a non-zero exit code.
         set +e
 
-        echo "Running semver-checks on packages: $PACKAGES for baseline: $BASELINE_REV"
+        echo "Running semver-checks on packages: $PACKAGES"
+        echo "- Baseline commit: $BASELINE_REV"
+        echo "- Head commit: $HEAD_REV"
+
         uv run "$ACTION_PATH/action.py" --baseline "$BASELINE_REV" --packages $PACKAGES > diagnostic.txt
         if [ "$?" -ne 0 ]; then
           echo "breaking=true" >> $GITHUB_OUTPUT
@@ -54,6 +57,7 @@ runs:
       env:
         ACTION_PATH: ${{ github.action_path }}
         BASELINE_REV: ${{ inputs.baseline-rev || github.event.pull_request.base.sha || github.event.merge_group.base.sha }}
+        HEAD_REV: ${{ github.event.pull_request.head.merge_commit_sha || github.event.merge_group.head.sha }}
         PACKAGES: ${{ inputs.packages }}
 
     # Check if the PR title contains a breaking change flag,
