@@ -48,11 +48,19 @@ runs:
         set +e
 
         cd PR_BRANCH
-        cargo semver-checks --color never --baseline-root ../BASELINE_BRANCH --release-type minor > diagnostic.txt
-        if [ "$?" -ne 0 ]; then
-          echo "breaking=true" >> $GITHUB_OUTPUT
-        else
+        cargo semver-checks --color never --baseline-root ../BASELINE_BRANCH --release-type minor > diagnostic.txt 2>&1
+        exit_code=$?
+
+        if grep -qE "not found in \.\./BASELINE_BRANCH" diagnostic.txt; then
+          echo "new_package=true" >> $GITHUB_OUTPUT
           echo "breaking=false" >> $GITHUB_OUTPUT
+        else
+          echo "new_package=false" >> $GITHUB_OUTPUT
+          if [ "$exit_code" -ne 0 ]; then
+            echo "breaking=true" >> $GITHUB_OUTPUT
+          else
+            echo "breaking=false" >> $GITHUB_OUTPUT
+          fi
         fi
 
         {
@@ -85,6 +93,27 @@ runs:
       run: |
         echo "breaking: ${{ steps.check-changes.outputs.breaking }}"
         echo "breaking-pr: ${{ steps.breaking-pr.outputs.breaking }}"
+        echo "new_package: ${{ steps.check-changes.outputs.new_package }}"
+
+    # Post a message if a new package is detected (not present in baseline)
+    - name: New package detected; skipping semver checks
+      if: ${{ (github.event_name == 'pull_request' || github.event_name == 'pull_request_target') && steps.check-changes.outputs.new_package == 'true' }}
+      uses: marocchino/sticky-pull-request-comment@v2
+      with:
+        header: rs-semver-checks
+        message: |
+          A new Rust package was added to the workspace and is not present in the baseline.
+          Skipping semver checks.
+
+          <details>
+            <summary>cargo-semver-checks output</summary>
+            
+            ```
+            ${{ steps.check-changes.outputs.semver_checks_diagnostic }}
+            ```
+            
+          </details>
+        GITHUB_TOKEN: ${{ inputs.token }}
 
     # Post a diagnostics comment if there are breaking changes and the PR has been marked as breaking.
     - name: Post a comment about the breaking changes. PR marked as breaking.
@@ -129,8 +158,9 @@ runs:
       shell: bash
       run: |
         rm -rf PR_BRANCH BASELINE_BRANCH
+
     - name: Fail if there are undeclared breaking changes
-      if: ${{ steps.check-changes.outputs.breaking == 'true' && steps.breaking-pr.outputs.breaking == 'false' }}
+      if: ${{ steps.check-changes.outputs.breaking == 'true' && steps.breaking-pr.outputs.breaking == 'false' && steps.check-changes.outputs.new_package != 'true' }}
       shell: bash
       run: exit 1
 
@@ -138,7 +168,7 @@ runs:
     # This step doesn't run if any of the previous checks fails.
     - name: Delete previous comments
       uses: marocchino/sticky-pull-request-comment@v2
-      if: ${{ (github.event_name == 'pull_request' || github.event_name == 'pull_request_target') && steps.check-changes.outputs.breaking == 'false' }}
+      if: ${{ (github.event_name == 'pull_request' || github.event_name == 'pull_request_target') && steps.check-changes.outputs.breaking == 'false' && steps.check-changes.outputs.new_package == 'false' }}
       with:
         header: rs-semver-checks
         delete: true
