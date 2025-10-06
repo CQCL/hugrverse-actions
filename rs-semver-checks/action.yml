@@ -160,7 +160,7 @@ runs:
         rm -rf PR_BRANCH BASELINE_BRANCH
 
     - name: Fail if there are undeclared breaking changes
-      if: ${{ steps.check-changes.outputs.breaking == 'true' && steps.breaking-pr.outputs.breaking == 'false' && steps.check-changes.outputs.new_package != 'true' }}
+      if: ${{ steps.check-changes.outputs.breaking == 'true' && steps.breaking-pr.outputs.breaking == 'false' && steps.check-changes.outputs.new_package == 'false' }}
       shell: bash
       run: exit 1
 
