@@ -19,7 +19,7 @@ runs:
       shell: bash
       run: git fetch origin "$BASELINE_REV" --depth 1
       env:
-        BASELINE_REV: ${{ inputs.baseline-rev || github.event.pull_request.base.sha || github.event.merge_group.base.sha }}
+        BASELINE_REV: ${{ inputs.baseline-rev || (github.event.pull_request.merge_commit_sha && format('{0}^1', github.event.pull_request.merge_commit_sha)) || github.event.merge_group.base.sha }}
 
     - name: Set up uv
       uses: astral-sh/setup-uv@v5
@@ -56,7 +56,7 @@ runs:
         cat diagnostic.txt
       env:
         ACTION_PATH: ${{ github.action_path }}
-        BASELINE_REV: ${{ inputs.baseline-rev || github.event.pull_request.base.sha || github.event.merge_group.base.sha }}
+        BASELINE_REV: ${{ inputs.baseline-rev || (github.event.pull_request.merge_commit_sha && format('{0}^1', github.event.pull_request.merge_commit_sha)) || github.event.merge_group.base.sha }}
         HEAD_REV: ${{ github.event.pull_request.head.merge_commit_sha || github.event.merge_group.head.sha }}
         PACKAGES: ${{ inputs.packages }}
 
