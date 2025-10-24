@@ -12,15 +12,37 @@ inputs:
 runs:
   using: composite
   steps:
-    - uses: actions/checkout@v4
+    - name: Checkout PR's head
+      uses: actions/checkout@v4
       with:
         ref: ${{ github.event.pull_request.merge_commit_sha || github.event.merge_group.head.sha }}
         path: PR_BRANCH
+        fetch-depth: 2
+
+    - name: Define baseline commit
+      id: define-baseline
+      shell: bash
+      run: |
+        # Use the baseline input if present, otherwise use the merge commit's first parent.
+        cd PR_BRANCH
+        PR_HEAD_SHA=$(git rev-parse "HEAD")
+        if [ -z "$BASELINE_INPUT" ]; then
+          # Compute the actual sha of the baseline commit.
+          BASELINE_REV=$(git rev-parse "HEAD^1")
+        else
+          BASELINE_REV="$BASELINE_INPUT"
+        fi
+        echo "BASELINE_REV=$BASELINE_REV" >> $GITHUB_OUTPUT
+        echo "Comparing PR's head ($PR_HEAD_SHA) against baseline ($BASELINE_REV)"
+      env:
+        BASELINE_INPUT: ${{ inputs.baseline-rev }}
+
     - name: Checkout baseline
       uses: actions/checkout@v4
       with:
-        ref: ${{ inputs.baseline-rev || (github.event.pull_request.merge_commit_sha && format('{0}^1', github.event.pull_request.merge_commit_sha)) || github.event.merge_group.base.sha }}
+        ref: ${{ steps.define-baseline.outputs.BASELINE_REV }}
         path: BASELINE_BRANCH
+
     - uses: mozilla-actions/sccache-action@v0.0.9
     - name: Install stable toolchain
       uses: dtolnay/rust-toolchain@stable
