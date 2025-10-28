@@ -12,14 +12,30 @@ inputs:
 runs:
   using: composite
   steps:
-    - uses: actions/checkout@v4
+    - name: Checkout PR's head
+      uses: actions/checkout@v4
       with:
         ref: ${{ github.event.pull_request.head.merge_commit_sha || github.event.merge_group.head.sha }}
-    - name: Fetch baseline
+        # This will fetch the baseline commit, defined as the first parent of the merge commit.
+        fetch-depth: 2
+
+    - name: Define baseline commit
+      id: define-baseline
       shell: bash
-      run: git fetch origin "$BASELINE_REV" --depth 1
+      run: |
+        # Use the baseline input if present, otherwise use the merge commit's first parent.
+        PR_HEAD_SHA=$(git rev-parse "HEAD")
+        if [ -z "$BASELINE_INPUT" ]; then
+          # Compute the actual sha of the baseline commit.
+          BASELINE_REV=$(git rev-parse "HEAD^1")
+        else
+          # Ensure the baseline commit has been fetched.
+          git fetch origin "$BASELINE_INPUT" --depth 1
+          BASELINE_REV="$BASELINE_INPUT"
+        fi
+        echo "BASELINE_REV=$BASELINE_REV" >> $GITHUB_OUTPUT
       env:
-        BASELINE_REV: ${{ inputs.baseline-rev || (github.event.pull_request.merge_commit_sha && format('{0}^1', github.event.pull_request.merge_commit_sha)) || github.event.merge_group.base.sha }}
+        BASELINE_INPUT: ${{ inputs.baseline-rev }}
 
     - name: Set up uv
       uses: astral-sh/setup-uv@v5
@@ -56,7 +72,7 @@ runs:
         cat diagnostic.txt
       env:
         ACTION_PATH: ${{ github.action_path }}
-        BASELINE_REV: ${{ inputs.baseline-rev || (github.event.pull_request.merge_commit_sha && format('{0}^1', github.event.pull_request.merge_commit_sha)) || github.event.merge_group.base.sha }}
+        BASELINE_REV: ${{ steps.define-baseline.outputs.BASELINE_REV }}
         HEAD_REV: ${{ github.event.pull_request.head.merge_commit_sha || github.event.merge_group.head.sha }}
         PACKAGES: ${{ inputs.packages }}
 
